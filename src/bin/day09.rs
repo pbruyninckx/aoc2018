@@ -26,7 +26,7 @@ fn parse_input(args: Vec<String>) -> Result<PuzzleInput, Error> {
 fn main() {
     let args: Vec<String> = env::args().collect();
     match parse_input(args) {
-        Ok(input) => println!("{}", solve(input)),
+        Ok(input) => println!("Score: {}", solve(input)),
         Err(e) => {
             println!("Something went wrong: {}", e);
             process::exit(1);
@@ -46,17 +46,16 @@ fn solve(puzzle_input: PuzzleInput) -> i64 {
             }
             let current_player = (i % puzzle_input.num_players) as usize;
             player_scores[current_player] += cursor.remove_current().unwrap() + i;
-            // println!("{}", cursor.current().unwrap_or(&mut -1));
+            if cursor.current().is_none() {
+                cursor.move_next();
+            }
         } else {
             cursor.circular_move_next();
             cursor.insert_after(i);
             cursor.circular_move_next();
         }
     }
-    // println!("{:?}", marbles);
-    // println!("{:?}", player_scores);
-    println!("Score: {}", player_scores.iter().max().unwrap());
-    0
+    *player_scores.iter().max().unwrap()
 }
 
 fn is_scoring_round(round: i64) -> bool {
@@ -69,13 +68,13 @@ pub trait CursorMutExt<T> {
 }
 
 impl<'a, T> CursorMutExt<T> for CursorMut<'a, T> {
-    fn circular_move_next(&mut self){
+    fn circular_move_next(&mut self) {
         self.move_next();
         if self.current().is_none() {
             self.move_next();
         }
     }
-    fn circular_move_prev(&mut self){
+    fn circular_move_prev(&mut self) {
         self.move_prev();
         if self.current().is_none() {
             self.move_prev();
