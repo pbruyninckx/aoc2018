@@ -22,6 +22,7 @@ fn display(points: &[Point]) {
 
 fn solve(points: &mut [Point]) {
     let mut max_width: i32 = i32::MAX;
+    let mut iterations = 0;
     loop {
         for point in points.iter_mut() {
             point.update()
@@ -31,6 +32,7 @@ fn solve(points: &mut [Point]) {
         if new_max_width > max_width {
             break;
         } else {
+            iterations += 1;
             max_width = new_max_width;
         }
     }
@@ -40,6 +42,8 @@ fn solve(points: &mut [Point]) {
     }
 
     display(points);
+
+    println!("Sec: {}", iterations);
 }
 
 fn main() -> Result<(), Error> {
