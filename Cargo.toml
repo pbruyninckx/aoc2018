@@ -8,3 +8,4 @@ authors= [ "Pieter Bruyninckx"]
 
 [dependencies]
 anyhow = "1.0"
+ndarray = "0.15.6"
