@@ -18,7 +18,7 @@ fn get_power_level(grid_serial_number: i32, x: i32, y: i32) -> i32 {
     rack_id * (rack_id * y + grid_serial_number) / 100 % 10 - 5
 }
 
-fn solve(grid_serial_number: i32) -> (i32, i32) {
+fn solve_for_window(grid_serial_number: i32, window: i32) -> ((i32, i32), i32) {
     let power_levels: Vec<_> = (1..(GRID_SIZE + 1))
         .map(|y| {
             (1..(GRID_SIZE + 1))
@@ -27,22 +27,35 @@ fn solve(grid_serial_number: i32) -> (i32, i32) {
         })
         .collect();
 
-    let window = 3;
-    let my_sliding_sum = |row| {sliding_sum(row, window)};
-    let square_power_levels :Vec<Vec<i32>>= transpose(
+    let my_sliding_sum = |row: &Vec<i32>| sliding_sum(row.iter(), window);
+    let square_power_levels: Vec<Vec<i32>> = transpose(
         transpose(power_levels.iter().map(my_sliding_sum).collect())
             .iter()
             .map(my_sliding_sum)
             .collect::<Vec<Vec<i32>>>(),
     );
-    let (index, _val) = square_power_levels.iter().flatten().enumerate().max_by_key(|(_i,el) | *el).unwrap();
+    let (index, val) = square_power_levels
+        .iter()
+        .flatten()
+        .enumerate()
+        .max_by_key(|(_i, el)| *el)
+        .unwrap();
     let new_grid_size = square_power_levels.len() as i32;
-    (index as i32 % new_grid_size + 1, index as i32 / new_grid_size + 1)
+    (
+        (
+            index as i32 % new_grid_size + 1,
+            index as i32 / new_grid_size + 1,
+        ),
+        *val,
+    )
 }
 
-fn sliding_sum(v: &Vec<i32>, window: i32) -> Vec<i32> {
-    let first: i32 = v.iter().take(window as usize).sum();
-    zip(v.iter(), v.iter().skip(window as usize))
+fn sliding_sum<'a, I>(v: I, window: i32) -> Vec<i32>
+where
+    I: Iterator<Item = &'a i32> + Clone,
+{
+    let first: i32 = v.clone().take(window as usize).sum();
+    zip(v.clone(), v.clone().skip(window as usize))
         .map(|(e1, e2)| e2 - e1)
         .fold(vec![first], |mut acc, el| {
             acc.push(acc.last().unwrap() + el);
@@ -59,10 +72,14 @@ fn transpose(mat: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
         .collect()
 }
 
+fn solve_part_one(grid_serial_number: i32) -> (i32, i32) {
+    solve_for_window(grid_serial_number, 3).0
+}
+
 fn main() -> Result<(), Error> {
     let grid_serial_number = get_input()?;
 
-    let (row,col) = solve(grid_serial_number);
+    let (row, col) = solve_part_one(grid_serial_number);
     println!("{},{}", row, col);
     Ok(())
 }
@@ -88,7 +105,10 @@ mod tests {
 
     #[rstest]
     fn test_sliding_sum() {
-        assert_eq!(sliding_sum(&vec![1, 2, 3, 4, 5, 6], 3), vec![6, 9, 12, 15]);
+        assert_eq!(
+            sliding_sum(vec![1, 2, 3, 4, 5, 6].iter(), 3),
+            vec![6, 9, 12, 15]
+        );
     }
 
     #[rstest]
