@@ -8,3 +8,6 @@ authors= [ "Pieter Bruyninckx"]
 
 [dependencies]
 anyhow = "1.0"
+
+[dev-dependencies]
+rstest = "0.18.2"
