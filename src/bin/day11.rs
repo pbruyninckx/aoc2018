@@ -76,11 +76,27 @@ fn solve_part_one(grid_serial_number: i32) -> (i32, i32) {
     solve_for_window(grid_serial_number, 3).0
 }
 
+fn solve_part_two(grid_serial_number: i32) -> (i32, i32, i32) {
+    (1..GRID_SIZE + 1)
+        .map(|window| {
+            let ((row, col), value) = solve_for_window(grid_serial_number, window);
+            ((row, col, window), value)
+        })
+        .max_by_key(|(_, val)| *val)
+        .unwrap()
+        .0
+}
+
 fn main() -> Result<(), Error> {
     let grid_serial_number = get_input()?;
-
-    let (row, col) = solve_part_one(grid_serial_number);
-    println!("{},{}", row, col);
+    {
+        let (row, col) = solve_part_one(grid_serial_number);
+        println!("{},{}", row, col);
+    }
+    {
+        let (row, col, window) = solve_part_two(grid_serial_number);
+        println!("{},{},{}", row, col, window);
+    }
     Ok(())
 }
 
@@ -117,5 +133,12 @@ mod tests {
             transpose(vec![vec![1, 2, 3], vec![4, 5, 6]]),
             vec![vec![1, 4], vec![2, 5], vec![3, 6]]
         );
+    }
+
+    #[rstest]
+    #[case(18, (90,269,16))]
+    #[case(42, (232,251,12))]
+    fn test_part_two(#[case] grid_serial_numer: i32, #[case] solution: (i32, i32, i32)) {
+        assert_eq!(solve_part_two(grid_serial_numer), solution)
     }
 }
