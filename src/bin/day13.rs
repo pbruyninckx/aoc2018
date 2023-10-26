@@ -123,23 +123,47 @@ impl Cart {
     }
 }
 
-fn is_crash_location(carts: &[Cart], moved_cart: &Cart) -> bool {
+fn get_crashed_cart(carts: &[Cart], moved_index: usize) -> Option<usize> {
     carts
         .iter()
-        .map(|c| c.location)
-        .filter(|l| l == &moved_cart.location)
-        .count()
-        == 2
+        .enumerate()
+        .filter(|(i, c)| *i != moved_index && c.location == carts[moved_index].location)
+        .map(|(i, _c)| i)
+        .next()
 }
 
-fn solve(map: &Map, mut carts: Vec<Cart>) -> (i32, i32) {
+fn solve1(map: &Map, mut carts: Vec<Cart>) -> (i32, i32) {
     loop {
         carts.sort_by_key(|c| c.location);
         for cart_index in 0..carts.len() {
             carts[cart_index].step(map);
-            let c = &carts[cart_index];
-            if is_crash_location(&carts, c) {
-                return c.location;
+            if get_crashed_cart(&carts, cart_index).is_some() {
+                return carts[cart_index].location;
+            }
+        }
+    }
+}
+
+fn solve2(map: &Map, mut carts: Vec<Cart>) -> (i32, i32) {
+    loop {
+        carts.sort_by_key(|c| c.location);
+        let mut cart_index = 0;
+        while cart_index < carts.len() {
+            carts[cart_index].step(map);
+            if let Some(crashed_index) = get_crashed_cart(&carts, cart_index) {
+                if crashed_index < cart_index {
+                    carts.remove(cart_index);
+                    carts.remove(crashed_index);
+                    cart_index -= 1;
+                } else {
+                    carts.remove(crashed_index);
+                    carts.remove(cart_index);
+                }
+                if carts.len() == 1 {
+                    return carts[0].location;
+                }
+            } else {
+                cart_index += 1
             }
         }
     }
@@ -147,7 +171,9 @@ fn solve(map: &Map, mut carts: Vec<Cart>) -> (i32, i32) {
 
 fn main() -> Result<(), Error> {
     let (map, carts) = parse_input(&read_to_string(Path::new("data/input13.txt"))?)?;
-    let (x, y) = solve(&map, carts);
+    let (x, y) = solve1(&map, carts.clone());
+    println!("{},{}", x, y);
+    let (x, y) = solve2(&map, carts);
     println!("{},{}", x, y);
     Ok(())
 }
