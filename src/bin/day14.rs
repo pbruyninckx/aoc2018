@@ -16,11 +16,18 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn solve(input: i32) -> i64 {
+fn scores_iter() -> impl Iterator<Item = usize> {
     let mut scores = vec![3, 7];
     let mut pos1 = 0usize;
     let mut pos2 = 1usize;
-    while scores.len() < (input + 10) as usize {
+    let mut next_to_return = 0usize;
+
+    std::iter::from_fn(move || {
+        if scores.len() > next_to_return {
+            next_to_return += 1;
+            return Some(scores[next_to_return - 1]);
+        }
+
         let combined = scores[pos1] + scores[pos2];
         let first = combined / 10;
         let second = combined % 10;
@@ -31,13 +38,18 @@ fn solve(input: i32) -> i64 {
 
         update_pos(&scores, &mut pos1);
         update_pos(&scores, &mut pos2);
-    }
 
-    scores
-        .iter()
+        next_to_return += 1;
+        Some(scores[next_to_return - 1])
+    })
+}
+
+fn solve(input: i32) -> i64 {
+
+    scores_iter()
         .skip(input as usize)
         .take(10)
-        .fold(0i64, |acc, val| 10 * acc + (*val as i64))
+        .fold(0i64, |acc, val| 10 * acc + (val as i64))
 }
 
 fn update_pos(scores: &Vec<usize>, pos: &mut usize) {
